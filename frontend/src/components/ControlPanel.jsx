@@ -6,26 +6,46 @@ export default function ControlPanel({ source, videoRef }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /* ================= START WEBCAM ================= */
   const startWebcam = async () => {
     if (!videoRef?.current) return;
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-    });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
 
-    videoRef.current.srcObject = stream;
-    await videoRef.current.play();
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+    } catch (err) {
+      setError("Camera access denied.");
+    }
   };
 
+  /* ================= STOP WEBCAM ================= */
+  const stopWebcam = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.srcObject) {
+      const tracks = video.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      video.srcObject = null;
+    }
+  };
+
+  /* ================= UPLOAD VIDEO ================= */
   const uploadVideo = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    videoRef.current.srcObject = null;
+    stopWebcam(); // stop camera if running
+
     videoRef.current.src = URL.createObjectURL(file);
     videoRef.current.play();
   };
 
+  /* ================= START LIVE ================= */
   const startLive = async (url) => {
     if (!url.includes(".m3u8")) {
       setError("Only .m3u8 streams supported.");
@@ -39,6 +59,8 @@ export default function ControlPanel({ source, videoRef }) {
       const video = videoRef.current;
       if (!video) return;
 
+      stopWebcam(); // stop webcam if active
+
       if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
@@ -47,6 +69,10 @@ export default function ControlPanel({ source, videoRef }) {
           video.play();
           setLoading(false);
         });
+      } else {
+        video.src = url;
+        video.play();
+        setLoading(false);
       }
     } catch (err) {
       setError("Failed to load stream.");
@@ -54,10 +80,18 @@ export default function ControlPanel({ source, videoRef }) {
     }
   };
 
+  /* ================= PLAY / PAUSE ================= */
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
+    // If webcam stream is active → stop camera fully
+    if (video.srcObject) {
+      stopWebcam();
+      return;
+    }
+
+    // For upload/live
     if (video.paused) {
       video.play();
     } else {
@@ -65,6 +99,7 @@ export default function ControlPanel({ source, videoRef }) {
     }
   };
 
+  /* ================= AUTO START WEBCAM ================= */
   useEffect(() => {
     if (source === "webcam") {
       startWebcam();
@@ -74,12 +109,14 @@ export default function ControlPanel({ source, videoRef }) {
   return (
     <div className="controls">
 
+      {/* Webcam */}
       {source === "webcam" && (
         <button className="control-btn" onClick={startWebcam}>
           🎥 Start Webcam
         </button>
       )}
 
+      {/* Upload */}
       {source === "upload" && (
         <label className="upload-btn">
           ⬆ Choose Video File
@@ -87,9 +124,9 @@ export default function ControlPanel({ source, videoRef }) {
         </label>
       )}
 
+      {/* Live Stream */}
       {source === "live" && (
         <div className="live-wrapper">
-
           <input
             className="live-input"
             type="text"
@@ -103,11 +140,10 @@ export default function ControlPanel({ source, videoRef }) {
 
           {loading && <div className="spinner"></div>}
           {error && <div className="error">{error}</div>}
-
         </div>
       )}
 
-      {/* Play / Pause for ALL modes */}
+      {/* Play / Pause / Stop Camera */}
       <button className="control-btn" onClick={togglePlay}>
         ⏯ Play / Pause
       </button>

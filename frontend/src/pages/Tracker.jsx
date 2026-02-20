@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import ControlPanel from "../components/ControlPanel";
 import VideoCanvas from "../components/VideoCanvas";
@@ -11,6 +11,19 @@ export default function Tracker() {
   const canvasRef = useRef(null);
 
   const [showAuth, setShowAuth] = useState(false);
+
+  /* ================= CLEANUP CAMERA ON PAGE EXIT ================= */
+  useEffect(() => {
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, []);
+
+  /* =============================================================== */
 
   return (
     <div className="tracker fade-in">
@@ -58,5 +71,5 @@ export default function Tracker() {
       />
 
     </div>
-  ); 
+  );
 } 
