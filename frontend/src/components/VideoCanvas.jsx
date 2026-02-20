@@ -1,54 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useObjectDetection from "../hooks/useObjectDetection";
 import useTracking from "../hooks/useTracking";
 import { initSegmenter, runSegmentation } from "../services/segmentationService";
 
 export default function VideoCanvas({ videoRef, canvasRef }) {
   const { predictions, detect } = useObjectDetection(videoRef);
-  const { selected, smoothBox } = useTracking();
-  const [mask, setMask] = useState(null);
+  const { selected, setSelected, smoothBox } = useTracking();
 
   useEffect(() => {
-    initSegmenter((results) => {
-      setMask(results.segmentationMask);
-    });
+    initSegmenter();
   }, []);
 
   useEffect(() => {
-    const loop = async () => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
 
-      if (!video || video.readyState !== 4) {
+    const ctx = canvas.getContext("2d");
+
+    const handleClick = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const clicked = predictions?.find((pred) => {
+        const [bx, by, bw, bh] = pred.bbox;
+        return x > bx && x < bx + bw && y > by && y < by + bh;
+      });
+
+      if (clicked) {
+        setSelected(clicked);
+      }
+    };
+
+    canvas.addEventListener("click", handleClick);
+
+    const loop = async () => {
+      if (video.readyState !== 4) {
         requestAnimationFrame(loop);
         return;
       }
-
-      const ctx = canvas.getContext("2d");
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
       await detect();
-      await runSegmentation(video);
+      const maskCanvas = null; 
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (mask) {
-        // Step 1: draw blurred background
-        ctx.filter = "blur(15px)";
-        ctx.drawImage(video, 0, 0);
+      if (maskCanvas) {
+        ctx.filter = "blur(18px)";
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Step 2: remove blur from subject
         ctx.filter = "none";
-        ctx.globalCompositeOperation = "destination-atop";
-        ctx.drawImage(mask, 0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = "destination-in";
+        ctx.drawImage(maskCanvas, 0, 0, canvas.width, canvas.height);
         ctx.globalCompositeOperation = "source-over";
 
-        // Step 3: draw sharp subject
-        ctx.drawImage(video, 0, 0);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       } else {
-        ctx.drawImage(video, 0, 0);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       }
 
       if (selected) {
@@ -62,17 +74,22 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
     };
 
     loop();
-  }, [mask, selected]);
 
+    return () => {
+      canvas.removeEventListener("click", handleClick);
+    };
+  }, [selected, predictions]);
+
+  // ✅ THIS RETURN MUST BE OUTSIDE useEffect
   return (
-    <div className="video-container">
+    <>
       <video
         ref={videoRef}
-        autoPlay
-        playsInline
         style={{ display: "none" }}
+        playsInline
+        autoPlay
       />
       <canvas ref={canvasRef} className="canvas" />
-    </div>
+    </>
   );
 } 

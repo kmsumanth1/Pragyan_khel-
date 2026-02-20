@@ -1,26 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function FPSCounter() {
   const [fps, setFps] = useState(0);
-  let frame = 0;
-  let lastTime = performance.now();
+  const frameCount = useRef(0);
+  const lastTime = useRef(performance.now());
+  const animationId = useRef(null);
 
   useEffect(() => {
     const loop = () => {
-      frame++;
+      frameCount.current++;
       const now = performance.now();
-      if (now - lastTime >= 1000) {
-        setFps(frame);
-        frame = 0;
-        lastTime = now;
+
+      if (now - lastTime.current >= 1000) {
+        setFps(frameCount.current);
+        frameCount.current = 0;
+        lastTime.current = now;
       }
-      requestAnimationFrame(loop);
+
+      animationId.current = requestAnimationFrame(loop);
     };
+
     loop();
+
+    return () => {
+      cancelAnimationFrame(animationId.current);
+    };
   }, []);
 
   return (
-    <div style={{ marginTop: "10px" }}>
+    <div style={{ position: "fixed", bottom: 10, left: 10 }}>
       FPS: {fps}
     </div>
   );
