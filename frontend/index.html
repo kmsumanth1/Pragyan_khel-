@@ -2,70 +2,143 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Video Portal</title>
+  <title>FocusAI Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
   <style>
     body {
-      background: #111;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, #1a0033, #000000);
       color: white;
       text-align: center;
-      font-family: Arial;
-      padding: 30px;
     }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      background: #2563eb;
+
+    .container {
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      background: linear-gradient(90deg, #c084fc, #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      opacity: 0.7;
+      letter-spacing: 3px;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      background: linear-gradient(90deg, #9333ea, #c084fc);
       border: none;
+      padding: 14px 30px;
+      border-radius: 30px;
       color: white;
-      border-radius: 6px;
+      font-size: 16px;
       cursor: pointer;
+      margin: 10px;
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.6);
+      transition: 0.3s ease;
     }
-    input {
-      padding: 8px;
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .file-input {
       margin: 10px;
     }
-    video {
-      width: 80%;
-      max-width: 800px;
+
+    .live-section {
       margin-top: 20px;
-      border-radius: 12px;
+    }
+
+    input[type="text"] {
+      padding: 12px;
+      width: 300px;
+      border-radius: 20px;
+      border: none;
+      outline: none;
+      background: #111;
+      color: white;
+      margin-right: 10px;
+    }
+
+    .video-box {
+      margin: 50px auto;
+      width: 80%;
+      max-width: 900px;
+      height: 450px;
+      border-radius: 20px;
+      background: #000;
+      box-shadow: 0 0 40px rgba(147, 51, 234, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .placeholder {
+      font-size: 18px;
+      opacity: 0.5;
     }
   </style>
 </head>
+
 <body>
 
-  <h1>Simple Video Portal</h1>
+  <div class="container">
+    <h1>Simple Video Portal</h1>
+    <div class="subtitle">AI SUBJECT TRACKING SYSTEM</div>
 
-  <button onclick="startWebcam()">Use Webcam</button>
-  <br>
+    <button class="btn" onclick="startWebcam()">Use Webcam</button>
+    <input type="file" class="file-input" accept="video/mp4" onchange="uploadVideo(event)">
 
-  <input type="file" accept="video/mp4" onchange="uploadVideo(event)">
-  <br>
+    <div class="live-section">
+      <input type="text" id="liveUrl" placeholder="Paste .m3u8 or video URL">
+      <button class="btn" onclick="startLive()">Start Live</button>
+    </div>
 
-  <input type="text" id="liveUrl" placeholder="Paste .m3u8 URL">
-  <button onclick="startLive()">Start Live</button>
-
-  <br>
-  <video id="video" controls autoplay playsinline></video>
+    <div class="video-box">
+      <video id="video" controls autoplay playsinline></video>
+      <div class="placeholder" id="placeholder">
+        Click a button above to start video
+      </div>
+    </div>
+  </div>
 
   <script>
     const video = document.getElementById("video");
+    const placeholder = document.getElementById("placeholder");
 
     async function startWebcam() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-      } catch (e) {
-        alert("Camera not allowed.");
+        placeholder.style.display = "none";
+      } catch {
+        alert("Camera permission denied.");
       }
     }
 
     function uploadVideo(event) {
       const file = event.target.files[0];
       if (!file) return;
+
       video.srcObject = null;
       video.src = URL.createObjectURL(file);
+      placeholder.style.display = "none";
     }
 
     function startLive() {
@@ -73,6 +146,7 @@
       if (!url) return;
 
       video.srcObject = null;
+      placeholder.style.display = "none";
 
       if (Hls.isSupported()) {
         const hls = new Hls();
@@ -85,5 +159,4 @@
   </script>
 
 </body>
-
 </html>
