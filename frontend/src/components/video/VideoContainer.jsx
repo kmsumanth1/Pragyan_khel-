@@ -8,6 +8,7 @@ function VideoContainer() {
   const [predictions, setPredictions] = useState([]);
   const [selectedObject, setSelectedObject] = useState(null);
 
+  // 🎥 Setup Camera
   useEffect(() => {
     const setupCamera = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -16,14 +17,17 @@ function VideoContainer() {
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
     };
+
     setupCamera();
   }, []);
 
+  // 🤖 Detection Loop
   useEffect(() => {
     let animationId;
 
     const detectFrame = async () => {
       const model = getModel();
+
       if (!model || !videoRef.current || videoRef.current.readyState !== 4) {
         animationId = requestAnimationFrame(detectFrame);
         return;
@@ -32,36 +36,47 @@ function VideoContainer() {
       const results = await model.detect(videoRef.current);
       setPredictions(results);
 
-      drawBoxes(results);
+      drawFrame(results);
 
       animationId = requestAnimationFrame(detectFrame);
     };
 
-    const drawBoxes = (results) => {
+    const drawFrame = (results) => {
       const ctx = canvasRef.current.getContext("2d");
+
+      // 1️⃣ Clear canvas
       ctx.clearRect(0, 0, 640, 480);
 
-      results.forEach((prediction, index) => {
-        const [x, y, width, height] = prediction.bbox;
+      // 2️⃣ Draw blurred full frame
+      ctx.filter = "blur(8px)";
+      ctx.drawImage(videoRef.current, 0, 0, 640, 480);
+      ctx.filter = "none";
 
-        // Highlight selected object
-        if (selectedObject === index) {
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 4;
-        } else {
-          ctx.strokeStyle = "lime";
-          ctx.lineWidth = 2;
-        }
+      // 3️⃣ If object selected → redraw sharp area
+      if (selectedObject !== null && results[selectedObject]) {
+        const [x, y, width, height] = results[selectedObject].bbox;
 
-        ctx.strokeRect(x, y, width, height);
-
-        ctx.fillStyle = "yellow";
-        ctx.font = "16px Arial";
-        ctx.fillText(
-          `${prediction.class} ${Math.round(prediction.score * 100)}%`,
-          x,
-          y > 20 ? y - 5 : 20
+        ctx.drawImage(
+          videoRef.current,
+          x, y, width, height, // source
+          x, y, width, height  // destination
         );
+
+        // 🔴 Red focus box
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(x, y, width, height);
+      }
+
+      // 4️⃣ Thin green boxes for other objects
+      results.forEach((prediction, index) => {
+        if (index !== selectedObject) {
+          const [x, y, width, height] = prediction.bbox;
+
+          ctx.strokeStyle = "lime";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, width, height);
+        }
       });
     };
 
@@ -70,7 +85,7 @@ function VideoContainer() {
     return () => cancelAnimationFrame(animationId);
   }, [selectedObject]);
 
-  // 🔥 Click handler
+  // 🖱 Click to select subject
   const handleClick = (event) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
