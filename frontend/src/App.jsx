@@ -1,18 +1,12 @@
-import { useEffect } from "react";
-import { initializeTensorFlow } from "./services/tfService";
-import VideoContainer from "./components/video/VideoContainer";
+import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Tracker from "./pages/Tracker";
 
-function App() {
-  useEffect(() => {
-    initializeTensorFlow();
-  }, []);
-
+export default function App() {
   return (
-    <div>
-      <h1>Pragyan Khel AI System</h1>
-      <VideoContainer />
-    </div>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/tracker/:source" element={<Tracker />} />
+    </Routes>
   );
 }
-
-export default App;
