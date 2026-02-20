@@ -2,9 +2,10 @@
 <html>
 <head>
   <title>AI Dynamic Tracker</title>
-  <link rel="stylesheet" href="src/styles.css">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
+
 <body class="fade-in">
 
   <div class="navbar">
@@ -27,18 +28,25 @@
     const video = document.getElementById("video");
 
     async function startWebcam() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera not available");
+      }
     }
 
     function uploadVideo(event) {
       const file = event.target.files[0];
+      if (!file) return;
       video.srcObject = null;
       video.src = URL.createObjectURL(file);
     }
 
     function startLive() {
       const url = document.getElementById("liveUrl").value;
+      if (!url) return alert("Enter stream URL");
+
       video.srcObject = null;
 
       if (Hls.isSupported()) {
@@ -52,4 +60,4 @@
   </script>
 
 </body>
-</html>
+</html> 

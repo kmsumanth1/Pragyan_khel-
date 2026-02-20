@@ -11,7 +11,6 @@ body {
   color: white;
 }
 
-/* Smooth fade animation */
 .fade-in {
   animation: fade 0.6s ease-in-out;
 }
@@ -21,7 +20,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Landing Page */
+/* HERO */
 .hero {
   text-align: center;
   padding: 120px 20px 60px;
@@ -66,18 +65,7 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.card h3 {
-  margin-top: 20px;
-  font-size: 22px;
-}
-
-.card p {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-/* Tracker Page */
+/* TRACKER */
 
 .navbar {
   padding: 20px 40px;
@@ -132,4 +120,4 @@ input[type="text"] {
   border: none;
   width: 300px;
   margin: 10px;
-}
+} 
