@@ -1,13 +1,89 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Video Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+      padding: 30px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background: #2563eb;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input {
+      padding: 8px;
+      margin: 10px;
+    }
+    video {
+      width: 80%;
+      max-width: 800px;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Simple Video Portal</h1>
+
+  <button onclick="startWebcam()">Use Webcam</button>
+  <br>
+
+  <input type="file" accept="video/mp4" onchange="uploadVideo(event)">
+  <br>
+
+  <input type="text" id="liveUrl" placeholder="Paste .m3u8 URL">
+  <button onclick="startLive()">Start Live</button>
+
+  <br>
+  <video id="video" controls autoplay playsinline></video>
+
+  <script>
+    const video = document.getElementById("video");
+
+    async function startWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (e) {
+        alert("Camera not allowed.");
+      }
+    }
+
+    function uploadVideo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      video.srcObject = null;
+      video.src = URL.createObjectURL(file);
+    }
+
+    function startLive() {
+      const url = document.getElementById("liveUrl").value;
+      if (!url) return;
+
+      video.srcObject = null;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else {
+        video.src = url;
+      }
+    }
+  </script>
+
+</body>
+
 </html>
