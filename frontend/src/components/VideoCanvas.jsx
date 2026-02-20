@@ -4,8 +4,8 @@ import useTracking from "../hooks/useTracking";
 import { initSegmenter, runSegmentation } from "../services/segmentationService";
 
 export default function VideoCanvas({ videoRef, canvasRef }) {
-  const { predictions, detect } = useObjectDetection(videoRef);
-  const { selected, setSelected, smoothBox } = useTracking();
+ const { detect } = useObjectDetection(videoRef);
+  const { selected, smoothBox } = useTracking();
 
   useEffect(() => {
     initSegmenter(() => {});
@@ -43,7 +43,7 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
     };
 
     loop();
-  }, [selected]);
+  }, [selected, detect, smoothBox, videoRef, canvasRef]);
 
   return (
     <div className="video-container">
