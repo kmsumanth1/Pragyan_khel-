@@ -15,18 +15,21 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
     const loop = async () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+
       if (!video || video.readyState !== 4) {
         requestAnimationFrame(loop);
         return;
       }
 
       const ctx = canvas.getContext("2d");
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
       await detect();
       await runSegmentation(video);
 
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(video, 0, 0);
 
       if (selected) {
@@ -42,5 +45,17 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
     loop();
   }, [selected]);
 
-  return <canvas ref={canvasRef} className="canvas" />;
+  return (
+    <div className="video-container">
+      {/* Hidden video used as source */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        style={{ display: "none" }}
+      />
+
+      <canvas ref={canvasRef} className="canvas" />
+    </div>
+  );
 } 
