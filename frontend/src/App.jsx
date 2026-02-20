@@ -9,4 +9,4 @@ export default function App() {
       <Route path="/tracker" element={<Tracker />} />
     </Routes>
   );
-}
+} 
