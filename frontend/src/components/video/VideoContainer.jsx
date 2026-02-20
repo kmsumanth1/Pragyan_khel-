@@ -5,105 +5,95 @@ function VideoContainer() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [predictions, setPredictions] = useState([]);
-  const [selectedObject, setSelectedObject] = useState(null);
+  const personsRef = useRef([]);
+  const selectedBoxRef = useRef(null);
 
-  // 🎥 Setup Camera
   useEffect(() => {
-    const setupCamera = async () => {
+    const setup = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
       });
+
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
+
+      startLoop();
     };
-    setupCamera();
+
+    setup();
   }, []);
 
-  // 🤖 Detection Loop
-  useEffect(() => {
-    let animationId;
+  const startLoop = () => {
+    const ctx = canvasRef.current.getContext("2d");
 
-    const detectFrame = async () => {
+    const loop = async () => {
       const model = getModel();
 
       if (!model || !videoRef.current || videoRef.current.readyState !== 4) {
-        animationId = requestAnimationFrame(detectFrame);
+        requestAnimationFrame(loop);
         return;
       }
 
-      const results = await model.detect(videoRef.current);
-      setPredictions(results);
+      const detections = await model.detect(videoRef.current);
+      const detectedPersons = detections.filter(
+        (d) => d.class === "person"
+      );
 
-      drawFrame(results);
-
-      animationId = requestAnimationFrame(detectFrame);
-    };
-
-    const drawFrame = (results) => {
-      const ctx = canvasRef.current.getContext("2d");
+      personsRef.current = detectedPersons;
 
       ctx.clearRect(0, 0, 640, 480);
 
-      // 1️⃣ Draw blurred full frame
-      ctx.filter = "blur(10px)";
       ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-      ctx.filter = "none";
 
-      // 2️⃣ If object selected → redraw sharp with soft edge
-      if (selectedObject !== null && results[selectedObject]) {
-        const [x, y, width, height] = results[selectedObject].bbox;
+      // Draw selected region sharp
+      if (selectedBoxRef.current) {
+        const [x, y, w, h] = selectedBoxRef.current;
 
-        // Create soft clipping region
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(x, y, width, height);
-        ctx.clip();
-
-        ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-        ctx.restore();
+        ctx.drawImage(
+          videoRef.current,
+          x, y, w, h,
+          x, y, w, h
+        );
       }
+
+      requestAnimationFrame(loop);
     };
 
-    detectFrame();
+    loop();
+  };
 
-    return () => cancelAnimationFrame(animationId);
-  }, [selectedObject]);
-
-  // 🖱 Click to select
   const handleClick = (event) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
 
-    predictions.forEach((prediction, index) => {
-      const [x, y, width, height] = prediction.bbox;
+    personsRef.current.forEach((person) => {
+      const [x, y, w, h] = person.bbox;
 
       if (
         clickX >= x &&
-        clickX <= x + width &&
+        clickX <= x + w &&
         clickY >= y &&
-        clickY <= y + height
+        clickY <= y + h
       ) {
-        setSelectedObject(index);
+        selectedBoxRef.current = person.bbox;
       }
     });
   };
 
   return (
-    <div style={{ position: "relative", textAlign: "center" }}>
-      <video
-        ref={videoRef}
-        width="640"
-        height="480"
-        style={{ position: "absolute", left: 0, top: 0 }}
-      />
+    <div style={{ textAlign: "center" }}>
       <canvas
         ref={canvasRef}
         width="640"
         height="480"
         onClick={handleClick}
-        style={{ position: "absolute", left: 0, top: 0 }}
+      />
+      <video
+        ref={videoRef}
+        width="640"
+        height="480"
+        style={{ display: "none" }}
       />
     </div>
   );
