@@ -17,7 +17,6 @@ function VideoContainer() {
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
     };
-
     setupCamera();
   }, []);
 
@@ -44,40 +43,26 @@ function VideoContainer() {
     const drawFrame = (results) => {
       const ctx = canvasRef.current.getContext("2d");
 
-      // 1️⃣ Clear canvas
       ctx.clearRect(0, 0, 640, 480);
 
-      // 2️⃣ Draw blurred full frame
-      ctx.filter = "blur(8px)";
+      // 1️⃣ Draw blurred full frame
+      ctx.filter = "blur(10px)";
       ctx.drawImage(videoRef.current, 0, 0, 640, 480);
       ctx.filter = "none";
 
-      // 3️⃣ If object selected → redraw sharp area
+      // 2️⃣ If object selected → redraw sharp with soft edge
       if (selectedObject !== null && results[selectedObject]) {
         const [x, y, width, height] = results[selectedObject].bbox;
 
-        ctx.drawImage(
-          videoRef.current,
-          x, y, width, height, // source
-          x, y, width, height  // destination
-        );
+        // Create soft clipping region
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, width, height);
+        ctx.clip();
 
-        // 🔴 Red focus box
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 4;
-        ctx.strokeRect(x, y, width, height);
+        ctx.drawImage(videoRef.current, 0, 0, 640, 480);
+        ctx.restore();
       }
-
-      // 4️⃣ Thin green boxes for other objects
-      results.forEach((prediction, index) => {
-        if (index !== selectedObject) {
-          const [x, y, width, height] = prediction.bbox;
-
-          ctx.strokeStyle = "lime";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x, y, width, height);
-        }
-      });
     };
 
     detectFrame();
@@ -85,7 +70,7 @@ function VideoContainer() {
     return () => cancelAnimationFrame(animationId);
   }, [selectedObject]);
 
-  // 🖱 Click to select subject
+  // 🖱 Click to select
   const handleClick = (event) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
