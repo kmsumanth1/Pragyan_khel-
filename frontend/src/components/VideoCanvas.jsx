@@ -1,14 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useObjectDetection from "../hooks/useObjectDetection";
 import useTracking from "../hooks/useTracking";
 import { initSegmenter, runSegmentation } from "../services/segmentationService";
 
 export default function VideoCanvas({ videoRef, canvasRef }) {
   const { predictions, detect } = useObjectDetection(videoRef);
-  const { selected, setSelected, smoothBox } = useTracking();
+  const { selected, smoothBox } = useTracking();
+  const [mask, setMask] = useState(null);
 
   useEffect(() => {
-    initSegmenter(() => {});
+    initSegmenter((results) => {
+      setMask(results.segmentationMask);
+    });
   }, []);
 
   useEffect(() => {
@@ -30,7 +33,23 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
       await runSegmentation(video);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(video, 0, 0);
+
+      if (mask) {
+        // Step 1: draw blurred background
+        ctx.filter = "blur(15px)";
+        ctx.drawImage(video, 0, 0);
+
+        // Step 2: remove blur from subject
+        ctx.filter = "none";
+        ctx.globalCompositeOperation = "destination-atop";
+        ctx.drawImage(mask, 0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = "source-over";
+
+        // Step 3: draw sharp subject
+        ctx.drawImage(video, 0, 0);
+      } else {
+        ctx.drawImage(video, 0, 0);
+      }
 
       if (selected) {
         const box = smoothBox(selected);
@@ -43,18 +62,16 @@ export default function VideoCanvas({ videoRef, canvasRef }) {
     };
 
     loop();
-  }, [selected]);
+  }, [mask, selected]);
 
   return (
     <div className="video-container">
-      {/* Hidden video used as source */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
         style={{ display: "none" }}
       />
-
       <canvas ref={canvasRef} className="canvas" />
     </div>
   );
