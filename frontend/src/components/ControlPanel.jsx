@@ -41,4 +41,4 @@ export default function ControlPanel({ source, videoRef }) {
       />
     </div>
   );
-}
+} 
