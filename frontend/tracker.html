@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Dynamic Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body class="fade-in">
+
+  <div class="navbar">
+    AI Dynamic Tracker
+  </div>
+
+  <div class="video-container">
+    <video id="video" controls autoplay></video>
+  </div>
+
+  <div class="controls">
+    <button onclick="startWebcam()">Use Webcam</button>
+    <input type="file" accept="video/mp4" onchange="uploadVideo(event)">
+    <br>
+    <input type="text" id="liveUrl" placeholder="Paste m3u8 URL">
+    <button onclick="startLive()">Start Live</button>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+
+    async function startWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera not available");
+      }
+    }
+
+    function uploadVideo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      video.srcObject = null;
+      video.src = URL.createObjectURL(file);
+    }
+
+    function startLive() {
+      const url = document.getElementById("liveUrl").value;
+      if (!url) return alert("Enter stream URL");
+
+      video.srcObject = null;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else {
+        video.src = url;
+      }
+    }
+  </script>
+
+</body>
+</html> 

@@ -5,6 +5,7 @@
   <title>FocusAI Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
   <style>
     body {
       margin: 0;
@@ -95,67 +96,37 @@
   </style>
 </head>
 
-<body>
+<body class="fade-in">
 
-  <div class="container">
+  <div class="hero">
     <h1>Simple Video Portal</h1>
     <div class="subtitle">AI SUBJECT TRACKING SYSTEM</div>
 
-    <button class="btn" onclick="startWebcam()">Use Webcam</button>
-    <input type="file" class="file-input" accept="video/mp4" onchange="uploadVideo(event)">
+    <div class="cards">
 
-    <div class="live-section">
-      <input type="text" id="liveUrl" placeholder="Paste .m3u8 or video URL">
-      <button class="btn" onclick="startLive()">Start Live</button>
-    </div>
-
-    <div class="video-box">
-      <video id="video" controls autoplay playsinline></video>
-      <div class="placeholder" id="placeholder">
-        Click a button above to start video
+      <div class="card" onclick="goTracker('webcam')">
+        <h3>Webcam</h3>
+        <p>Use your device camera</p>
       </div>
+
+      <div class="card" onclick="goTracker('upload')">
+        <h3>Upload</h3>
+        <p>Select a video file</p>
+      </div>
+
+      <div class="card" onclick="goTracker('live')">
+        <h3>Live Stream</h3>
+        <p>Enter stream URL</p>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const video = document.getElementById("video");
-    const placeholder = document.getElementById("placeholder");
-
-    async function startWebcam() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        placeholder.style.display = "none";
-      } catch {
-        alert("Camera permission denied.");
-      }
-    }
-
-    function uploadVideo(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      video.srcObject = null;
-      video.src = URL.createObjectURL(file);
-      placeholder.style.display = "none";
-    }
-
-    function startLive() {
-      const url = document.getElementById("liveUrl").value;
-      if (!url) return;
-
-      video.srcObject = null;
-      placeholder.style.display = "none";
-
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else {
-        video.src = url;
-      }
+    function goTracker(type) {
+      window.location.href = "tracker.html?source=" + type;
     }
   </script>
 
 </body>
-</html>
+</html> 
