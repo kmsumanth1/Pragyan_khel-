@@ -1,13 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useRef, useState, useEffect, useContext } from "react";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 import ControlPanel from "../components/ControlPanel";
 import VideoCanvas from "../components/VideoCanvas";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Tracker() {
   const { source } = useParams();
+const navigate = useNavigate();
+
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -33,94 +35,78 @@ export default function Tracker() {
   };
 
   /* ================= CLEANUP CAMERA ON PAGE EXIT ================= */
-  useEffect(() => {
-    return () => {
-      if (videoRef.current) {
-        if (videoRef.current.srcObject) {
-          const tracks = videoRef.current.srcObject.getTracks();
-          tracks.forEach(track => track.stop());
-          videoRef.current.srcObject = null;
-        }
-        videoRef.current.pause();
-      }
-    };
-  }, []);
+ useEffect(() => {
+  return () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+
+    video.pause();
+  };
+}, []); 
   /* =============================================================== */
+  /* =============================================================== */
+return (
+  <div className="tracker-container">
 
-  return (
-    <div className="tracker fade-in">
+    {/* Top Right Profile */}
+    <div className="nav-right">
+      <div
+        className="profile-icon"
+        onClick={() => setShowAuth(!showAuth)}
+      >
+        👤
+      </div>
 
-      {/* ================= NAVBAR ================= */}
-      <div className="navbar">
-        <div className="nav-left">
-          AI Dynamic Tracker
-        </div>
+      {showAuth && (
+        <div className="auth-modal">
+          {!user ? (
+            <>
+              <h3>Login</h3>
 
-        <div className="nav-right">
+              <input
+                placeholder="Gmail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
-          <div
-            className="profile-icon"
-            onClick={() => setShowAuth(!showAuth)}
-          >
-            👤
-          </div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
 
-          {showAuth && (
-            <div className="auth-modal">
+              <button onClick={handleLogin}>Login</button>
 
-              {!user ? (
-                <>
-                  <h3>Login</h3>
-
-                  <input
-                    placeholder="Email"
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-
-                  <button onClick={handleLogin}>
-                    Login
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p>Logged in</p>
-                  <button onClick={logout}>
-                    Logout
-                  </button>
-                </>
-              )}
-
-            </div>
+              <p
+                className="forgot-link"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot Password?
+              </p>
+            </>
+          ) : (
+            <>
+              <p>Logged in as {user}</p>
+              <button onClick={logout}>Logout</button>
+            </>
           )}
-
         </div>
-      </div>
-
-      {/* ================= SOURCE LABEL ================= */}
-      <div className="source-label">
-        Source: <span>{source?.toUpperCase()}</span>
-      </div>
-
-      {/* ================= VIDEO AREA ================= */}
-      <div className="video-section">
-        <VideoCanvas
-          videoRef={videoRef}
-          canvasRef={canvasRef}
-        />
-      </div>
-
-      {/* ================= CONTROLS ================= */}
-      <ControlPanel
-        source={source}
-        videoRef={videoRef}
-      />
-
+      )}
     </div>
-  );
+
+    {/* Video + Canvas */}
+    <VideoCanvas videoRef={videoRef} canvasRef={canvasRef} />
+
+    {/* Controls */}
+    <ControlPanel source={source} videoRef={videoRef} />
+
+  </div> 
+
+); 
 } 

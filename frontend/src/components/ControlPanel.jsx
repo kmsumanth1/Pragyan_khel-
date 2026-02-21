@@ -81,23 +81,31 @@ export default function ControlPanel({ source, videoRef }) {
   };
 
   /* ================= PLAY / PAUSE ================= */
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
+const togglePlay = async () => {
+  const video = videoRef.current;
+  if (!video) return;
 
-    // If webcam stream is active → stop camera fully
+  // 🔵 If webcam mode
+  if (source === "webcam") {
     if (video.srcObject) {
-      stopWebcam();
-      return;
-    }
-
-    // For upload/live
-    if (video.paused) {
-      video.play();
-    } else {
+      // Stop camera
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
       video.pause();
+    } else {
+      // Restart camera
+      await startWebcam();
     }
-  };
+    return;
+  }
+
+  // 🟣 For upload or live
+  if (video.paused) {
+    video.play();
+  } else {
+    video.pause();
+  }
+}; 
 
   /* ================= AUTO START WEBCAM ================= */
   useEffect(() => {

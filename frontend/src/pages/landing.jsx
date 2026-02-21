@@ -1,29 +1,71 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Landing() {
-  const navigate = useNavigate();
+  
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate(); 
+  const [showAuth, setShowAuth] = useState(false);
 
-  return (
-    <div className="hero fade-in">
-      <h1>Simple Video Portal</h1>
-      <div className="subtitle">AI SUBJECT TRACKING SYSTEM</div>
+    /* =============================================================== */
+return (
+  <div className="tracker-container">
 
-      <div className="cards">
-        <div className="card" onClick={() => navigate("/tracker/webcam")}>
-          <h3>Webcam</h3>
-          <p>Use your device camera</p>
-        </div>
-
-        <div className="card" onClick={() => navigate("/tracker/upload")}>
-          <h3>Upload</h3>
-          <p>Select a video file</p>
-        </div>
-
-        <div className="card" onClick={() => navigate("/tracker/live")}>
-          <h3>Live Stream</h3>
-          <p>Enter stream URL</p>
-        </div>
+    {/* Top Right Profile */}
+    <div className="nav-right">
+      <div
+        className="profile-icon"
+        onClick={() => setShowAuth(!showAuth)}
+      >
+        👤
       </div>
+
+      {showAuth && (
+        <div className="auth-modal">
+          {!user ? (
+            <>
+              <h3>Login</h3>
+
+              <input
+                placeholder="Gmail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <button onClick={handleLogin}>Login</button>
+
+              <p
+                className="forgot-link"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot Password?
+              </p>
+            </>
+          ) : (
+            <>
+              <p>Logged in as {user}</p>
+              <button onClick={logout}>Logout</button>
+            </>
+          )}
+        </div>
+      )}
     </div>
-  );
+
+    {/* Video + Canvas */}
+    <VideoCanvas videoRef={videoRef} canvasRef={canvasRef} />
+
+    {/* Controls */}
+    <ControlPanel source={source} videoRef={videoRef} />
+
+  </div> 
+
+); 
 } 
