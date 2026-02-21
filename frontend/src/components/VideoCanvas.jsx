@@ -7,7 +7,7 @@ export default function VideoCanvas() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
-
+const spotlightRef = useRef(null); 
   useEffect(() => {
     async function setup() {
       console.log("Starting setup..."); // ✅ DEBUG
@@ -36,52 +36,60 @@ export default function VideoCanvas() {
   }, []);
 
   const startLoop = () => {
-    const loop = async () => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+  const loop = async () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
 
-      if (!video || video.readyState !== 4) {
-        animationRef.current = requestAnimationFrame(loop);
-        return;
-      }
-
-      const ctx = canvas.getContext("2d");
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      ctx.drawImage(video, 0, 0);
-
-      const boxes = await detectFrame(video);
-
-      console.log("Boxes:", boxes); // ✅ DEBUG
-
-      boxes.forEach((box) => {
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(
-          box.originX,
-          box.originY,
-          box.width,
-          box.height
-        );
-      });
-
+    if (!video || video.readyState !== 4) {
       animationRef.current = requestAnimationFrame(loop);
-    };
+      return;
+    }
 
-    loop();
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0);
+
+    const boxes = await detectFrame(video);
+
+    boxes.forEach((box) => {
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(
+        box.originX,
+        box.originY,
+        box.width,
+        box.height
+      );
+    });
+
+    animationRef.current = requestAnimationFrame(loop);
   };
 
-  return (
-    <div>
-      <canvas ref={canvasRef} />
-      <video
-        ref={videoRef}
-        muted
-        playsInline
-        style={{ display: "none" }}
-      />
-    </div>
-  );
-}
+  loop();
+
+ 
+}; 
+  rreturn (
+  <div
+    style={{ display: "inline-block" }}
+    onClick={(e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      spotlightRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }}
+  >
+    <canvas ref={canvasRef} />
+    <video
+      ref={videoRef}
+      muted
+      playsInline
+      style={{ display: "none" }}
+    />
+  </div> 
+);
+}  

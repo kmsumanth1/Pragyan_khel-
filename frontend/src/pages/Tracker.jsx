@@ -1,6 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ControlPanel from "../components/ControlPanel";
 import { AuthContext } from "../context/AuthContext";
@@ -14,12 +13,14 @@ export default function Tracker() {
   const canvasRef = useRef(null);
 
   const { user, login, logout } = useContext(AuthContext);
+
   const [showAuth, setShowAuth] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [youtubeEmbed, setYoutubeEmbed] = useState(null);
 
   /* ================= AUTH ================= */
+
   const handleLogin = async () => {
     try {
       const res = await axios.post("http://localhost:5000/login", {
@@ -35,13 +36,14 @@ export default function Tracker() {
   };
 
   /* ================= CLEANUP ================= */
+
   useEffect(() => {
     return () => {
       const video = videoRef.current;
       if (!video) return;
 
       if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject.getTracks().forEach((track) => track.stop());
         video.srcObject = null;
       }
 
@@ -50,6 +52,7 @@ export default function Tracker() {
   }, []);
 
   /* ================= WEBCAM ================= */
+
   useEffect(() => {
     if (source === "webcam") {
       setYoutubeEmbed(null);
@@ -65,17 +68,18 @@ export default function Tracker() {
     }
   }, [source]);
 
-  /* ================= YOUTUBE PARSER ================= */
+  /* ================= STREAM HANDLER ================= */
+
   const handleStreamInput = (url) => {
     let videoId = null;
 
     try {
-      // Standard watch link
+      // Standard YouTube link
       if (url.includes("youtube.com/watch")) {
         videoId = new URL(url).searchParams.get("v");
       }
 
-      // Short link
+      // Short YouTube link
       if (url.includes("youtu.be/")) {
         videoId = url.split("youtu.be/")[1].split("?")[0];
       }
@@ -94,17 +98,17 @@ export default function Tracker() {
       setYoutubeEmbed(null);
       videoRef.current.srcObject = null;
       videoRef.current.src = url;
-
     } catch {
       alert("Invalid URL");
     }
   };
 
   /* ================= RENDER ================= */
+
   return (
     <div className="tracker-page">
 
-      {/* Profile */}
+      {/* PROFILE ICON */}
       <div className="nav-right">
         <div
           className="profile-icon"
@@ -141,10 +145,10 @@ export default function Tracker() {
         )}
       </div>
 
-      {/* Card */}
+      {/* MAIN CARD */}
       <div className="tracker-card">
 
-        {/* Video Area */}
+        {/* VIDEO AREA */}
         <div className="video-container">
           {youtubeEmbed ? (
             <iframe
@@ -155,6 +159,7 @@ export default function Tracker() {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              title="YouTube Video"
             />
           ) : (
             <>
@@ -172,7 +177,7 @@ export default function Tracker() {
           )}
         </div>
 
-        {/* Upload */}
+        {/* UPLOAD SECTION */}
         {source === "upload" && (
           <div className="upload-section">
             <input
@@ -196,7 +201,7 @@ export default function Tracker() {
           </div>
         )}
 
-        {/* Livestream */}
+        {/* LIVESTREAM SECTION */}
         {source === "livestream" && (
           <div className="livestream-section">
             <input
@@ -212,7 +217,7 @@ export default function Tracker() {
           </div>
         )}
 
-        {/* Controls */}
+        {/* CONTROLS */}
         <ControlPanel source={source} videoRef={videoRef} />
 
       </div>

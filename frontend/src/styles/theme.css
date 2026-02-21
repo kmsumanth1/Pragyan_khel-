@@ -152,14 +152,8 @@ body {
 }
 
 /* GLASS OVERLAY */
-.video-container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(25px);
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 1;
-}
+
+
 
 /* keep canvas above blur */
 .canvas-layer {
@@ -977,4 +971,96 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+} 
+.video-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.video-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.blur-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(20px);
+
+  mask: radial-gradient(
+    circle 130px at var(--x) var(--y),
+    transparent 0px,
+    black 160px
+  );
+
+  -webkit-mask: radial-gradient(
+    circle 130px at var(--x) var(--y),
+    transparent 0px,
+    black 160px
+  );
+
+  pointer-events: none;
+}
+.video-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.video-canvas {
+  display: block;
+  border-radius: 20px;
+}
+
+/* Blur layer covering entire video */
+.blur-layer {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(18px);
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+/* When clicked, reveal circular area */
+.video-wrapper.reveal .blur-layer {
+  mask: radial-gradient(
+    circle 140px at var(--x) var(--y),
+    transparent 0px,
+    black 160px
+  );
+
+  -webkit-mask: radial-gradient(
+    circle 140px at var(--x) var(--y),
+    transparent 0px,
+    black 160px
+  );
+} 
+.video-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.video-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 20px;
+}
+
+/* Normal clear canvas */
+.clear-layer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Blurred layer */
+.blur-layer {
+  z-index: 1;
+  filter: blur(20px);
+}
+
+/* Spotlight mask */
+.spotlight-active .blur-layer {
+  clip-path: circle(150px at var(--x) var(--y));
 } 
