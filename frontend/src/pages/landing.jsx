@@ -1,71 +1,112 @@
-import { useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import "../styles/theme.css";
 
 export default function Landing() {
-  
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const { user, login, logout } = useContext(AuthContext);
+
   const [showAuth, setShowAuth] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    /* =============================================================== */
-return (
-  <div className="tracker-container">
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post("http://localhost:5000/login", {
+        email,
+        password,
+      });
 
-    {/* Top Right Profile */}
-    <div className="nav-right">
-      <div
-        className="profile-icon"
-        onClick={() => setShowAuth(!showAuth)}
-      >
-        👤
+      login(res.data.token);
+      setShowAuth(false);
+    } catch {
+      alert("Login failed");
+    }
+  };
+
+  return (
+    <div className="landing">
+
+      {/* Profile Icon */}
+      <div className="profile-wrapper">
+        <div
+          className="profile-icon"
+          onClick={() => setShowAuth(!showAuth)}
+        >
+          👤
+        </div>
+
+        {showAuth && (
+          <div className="login-dropdown">
+            {!user ? (
+              <>
+                <h3>Login</h3>
+                <input
+                  placeholder="Gmail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button onClick={handleLogin}>Login</button>
+              </>
+            ) : (
+              <>
+                <p>Logged in</p>
+                <button onClick={logout}>Logout</button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {showAuth && (
-        <div className="auth-modal">
-          {!user ? (
-            <>
-              <h3>Login</h3>
+      {/* Hero Section */}
+      <div className="hero">
+        <h1>Simple Video Portal</h1>
+        <p className="subtitle">AI SUBJECT TRACKING SYSTEM</p>
 
-              <input
-                placeholder="Gmail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+        <div className="card-container">
 
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+          <div
+            className="source-card"
+            onClick={() => navigate("/tracker/webcam")}
+          >
+            <div className="icon-box purple">📷</div>
+            <h2>Webcam</h2>
+            <p>Use your device camera</p>
+          </div>
 
-              <button onClick={handleLogin}>Login</button>
+          <div
+            className="source-card"
+            onClick={() => navigate("/tracker/upload")}
+          >
+            <div className="icon-box gradient">⬆</div>
+            <h2>Upload</h2>
+            <p>Select a video file</p>
+          </div>
 
-              <p
-                className="forgot-link"
-                onClick={() => navigate("/forgot-password")}
-              >
-                Forgot Password?
-              </p>
-            </>
-          ) : (
-            <>
-              <p>Logged in as {user}</p>
-              <button onClick={logout}>Logout</button>
-            </>
-          )}
+          <div
+            className="source-card"
+            onClick={() => navigate("/tracker/livestream")}
+          >
+            <div className="icon-box pink">📡</div>
+            <h2>Live Stream</h2>
+            <p>Enter stream URL</p>
+          </div>
+
         </div>
-      )}
+
+        <p className="footer-text">
+          Select a source to begin AI-powered subject tracking
+        </p>
+      </div>
+
     </div>
-
-    {/* Video + Canvas */}
-    <VideoCanvas videoRef={videoRef} canvasRef={canvasRef} />
-
-    {/* Controls */}
-    <ControlPanel source={source} videoRef={videoRef} />
-
-  </div> 
-
-); 
+  );
 } 
