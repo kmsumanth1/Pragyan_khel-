@@ -1064,3 +1064,16 @@ body {
 .spotlight-active .blur-layer {
   clip-path: circle(150px at var(--x) var(--y));
 } 
+.video-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 480px;
+}
+
+.tracker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+} 
