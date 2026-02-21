@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ControlPanel from "../components/ControlPanel";
 import { AuthContext } from "../context/AuthContext";
-import "../styles/theme.css"; // make sure this exists
+import "../styles/theme.css";
 
 export default function Tracker() {
   const { source } = useParams();
@@ -13,12 +13,13 @@ export default function Tracker() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  /* ================= AUTH ================= */
   const { user, login, logout } = useContext(AuthContext);
   const [showAuth, setShowAuth] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [youtubeEmbed, setYoutubeEmbed] = useState(null);
 
+  /* ================= AUTH ================= */
   const handleLogin = async () => {
     try {
       const res = await axios.post("http://localhost:5000/login", {
@@ -33,14 +34,14 @@ export default function Tracker() {
     }
   };
 
-  /* ================= CLEANUP CAMERA ================= */
+  /* ================= CLEANUP ================= */
   useEffect(() => {
     return () => {
       const video = videoRef.current;
       if (!video) return;
 
       if (video.srcObject) {
-        video.srcObject.getTracks().forEach((track) => track.stop());
+        video.srcObject.getTracks().forEach(track => track.stop());
         video.srcObject = null;
       }
 
@@ -48,9 +49,11 @@ export default function Tracker() {
     };
   }, []);
 
-  /* ================= WEBCAM AUTO START ================= */
+  /* ================= WEBCAM ================= */
   useEffect(() => {
     if (source === "webcam") {
+      setYoutubeEmbed(null);
+
       navigator.mediaDevices
         .getUserMedia({ video: true })
         .then((stream) => {
@@ -62,10 +65,46 @@ export default function Tracker() {
     }
   }, [source]);
 
+  /* ================= YOUTUBE PARSER ================= */
+  const handleStreamInput = (url) => {
+    let videoId = null;
+
+    try {
+      // Standard watch link
+      if (url.includes("youtube.com/watch")) {
+        videoId = new URL(url).searchParams.get("v");
+      }
+
+      // Short link
+      if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1].split("?")[0];
+      }
+
+      // Embed link
+      if (url.includes("youtube.com/embed/")) {
+        videoId = url.split("embed/")[1].split("?")[0];
+      }
+
+      if (videoId) {
+        setYoutubeEmbed(`https://www.youtube.com/embed/${videoId}`);
+        return;
+      }
+
+      // Otherwise treat as direct video link
+      setYoutubeEmbed(null);
+      videoRef.current.srcObject = null;
+      videoRef.current.src = url;
+
+    } catch {
+      alert("Invalid URL");
+    }
+  };
+
+  /* ================= RENDER ================= */
   return (
     <div className="tracker-page">
 
-      {/* Top Right Profile */}
+      {/* Profile */}
       <div className="nav-right">
         <div
           className="profile-icon"
@@ -102,21 +141,38 @@ export default function Tracker() {
         )}
       </div>
 
-      {/* Main Purple Card */}
+      {/* Card */}
       <div className="tracker-card">
 
-        {/* Video Display */}
+        {/* Video Area */}
         <div className="video-container">
-          <video
-            ref={videoRef}
-            className="video-player"
-            controls
-            autoPlay
-          />
-          <canvas ref={canvasRef} className="video-canvas" />
+          {youtubeEmbed ? (
+            <iframe
+              src={youtubeEmbed}
+              width="700"
+              height="400"
+              className="video-player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                className="video-player"
+                controls
+                autoPlay
+              />
+              <canvas
+                ref={canvasRef}
+                className="video-canvas"
+              />
+            </>
+          )}
         </div>
 
-        {/* Upload Section */}
+        {/* Upload */}
         {source === "upload" && (
           <div className="upload-section">
             <input
@@ -131,6 +187,7 @@ export default function Tracker() {
                   return;
                 }
 
+                setYoutubeEmbed(null);
                 const videoURL = URL.createObjectURL(file);
                 videoRef.current.srcObject = null;
                 videoRef.current.src = videoURL;
@@ -139,17 +196,16 @@ export default function Tracker() {
           </div>
         )}
 
-        {/* Livestream Section */}
+        {/* Livestream */}
         {source === "livestream" && (
           <div className="livestream-section">
             <input
               type="text"
-              placeholder="Paste livestream URL and press Enter"
+              placeholder="Paste MP4 or YouTube URL and press Enter"
               className="stream-input"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  videoRef.current.srcObject = null;
-                  videoRef.current.src = e.target.value;
+                  handleStreamInput(e.target.value.trim());
                 }
               }}
             />

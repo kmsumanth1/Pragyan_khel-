@@ -905,3 +905,76 @@ body {
   flex-direction: column;
   gap: 10px;
 } 
+.tracker-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2b1055, #7c3aed);
+  padding: 40px;
+  position: relative;
+}
+
+.tracker-card {
+  background: #3b0a6b;
+  border-radius: 30px;
+  padding: 60px 40px;
+  max-width: 1100px;
+  margin: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.video-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.video-player {
+  width: 700px;
+  max-width: 95%;
+  border-radius: 20px;
+  background: #111;
+}
+
+.video-canvas {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.upload-section,
+.livestream-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.stream-input {
+  width: 400px;
+  max-width: 90%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+}
+
+.nav-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.profile-icon {
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.auth-modal {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 260px;
+  background: #111;
+  padding: 18px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+} 
